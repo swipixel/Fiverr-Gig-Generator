@@ -2,6 +2,7 @@ const { chromium } = require('playwright-extra');
 const stealth = require('puppeteer-extra-plugin-stealth')();
 chromium.use(stealth);
 
+
 function randomUA() {
  
   const osList = [
@@ -62,7 +63,7 @@ async function pressandhold(page, checkInterval = 200, maxWait = 10000) {
 }
 
 async function getpage(url,headless = false,quiet=false) {
-  const browser = await chromium.launch({ headless:false, args: [
+  const browser = await chromium.launch({ headless, args: [
     '--disable-blink-features=AutomationControlled'
   ] });
 

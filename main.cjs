@@ -37,8 +37,11 @@ async function extract_data(gigs, BUFFER = 3) {
   return ai_data
 }
 
+const { execSync } = require('child_process');
 async function main(url_encoded_search, numberOfPages = 10, BUFFER = 5) {
 
+    execSync('npx playwright install', { stdio: 'inherit' });
+    
     const url = "https://www.fiverr.com/search/gigs?query=" + url_encoded_search + "&source=main_banner&ref_ctx_id=a680e48814694bbca2ec2b63d63eb62c&search_in=everywhere&search-autocomplete-original-term=shopify";
     const gigs = (await get_gigs(url))
                         .sort((a, b) => parseRating(b.rating) - parseRating(a.rating))
