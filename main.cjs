@@ -3,7 +3,7 @@ const scraper = require('./scrape.js');
 const {parseRating} = require("./parsing.cjs")
 
 async function get_gigs(url) {
-    const searchPage = await getPage(url, false);
+    const searchPage = await getPage(url, headless=true);
     const data = await scraper.scrapeRatingsAndLinks(searchPage);
     await searchPage.context().browser().close();
     return data;
@@ -20,8 +20,8 @@ async function extract_data(gigs, BUFFER = 3) {
         const pagePromises = batch.map(gig => {
 
             if (!gig.link) return null;
-            const fullUrl = "https://www.fiverr.com" + gig.link;
-            return getPage(fullUrl, headless = false, quiet = true).then(async page => {
+            const fullUrl = "https://www.fiverr.com" + gig.link + "&source=main_banner&ref_ctx_id=a680e48814694bbca2ec2b63d63eb62c&search_in=everywhere&search-autocomplete-original-term=shopify";
+            return getPage(fullUrl, headless = true, quiet = true).then(async page => {
                 if (page == null) return;
                 const title = await scraper.scrapeTitle(page);
                 ai_data.push({
@@ -37,18 +37,16 @@ async function extract_data(gigs, BUFFER = 3) {
   return ai_data
 }
 
-async function main() {
-    const search = "shopify ai assistant";
-    const numberOfPages = 30
-    const BUFFER = 5
+async function main(url_encoded_search, numberOfPages = 10, BUFFER = 5) {
 
-    const url = "https://www.fiverr.com/search/gigs?query=" + encodeURIComponent(search);
+    const url = "https://www.fiverr.com/search/gigs?query=" + url_encoded_search + "&source=main_banner&ref_ctx_id=a680e48814694bbca2ec2b63d63eb62c&search_in=everywhere&search-autocomplete-original-term=shopify";
     const gigs = (await get_gigs(url))
                         .sort((a, b) => parseRating(b.rating) - parseRating(a.rating))
                         .slice(0, numberOfPages);
-
     const ai_data = await extract_data(gigs, BUFFER)
     console.log(ai_data)
+
+    return ai_data
 }
 
-main();
+module.exports = main

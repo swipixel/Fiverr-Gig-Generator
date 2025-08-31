@@ -5,7 +5,6 @@ function parseRating(ratingStr) {
     return parseFloat(ratingStr) * 1000;
   }
   
-  // Remove any commas or plus signs, then parse
   return parseFloat(ratingStr.replace(/[,+]/g, '')) || 0;
 }
 
