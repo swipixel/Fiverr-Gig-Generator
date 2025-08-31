@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const main = require("./main.cjs")
 
-const port = 3000
+const port = process.env.PORT || 3000;
 
 app.get('/', async (req, res) => {
   res.json(
