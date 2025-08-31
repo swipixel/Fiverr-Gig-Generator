@@ -23,47 +23,58 @@ function randomUA() {
 
   return `Mozilla/5.0 (${os}) AppleWebKit/${webkitMajor}.${webkitMinor} (KHTML, like Gecko) Chrome/${chromeMajor}.0.${chromeMinor}.${chromeBuild} Safari/${webkitMajor}.${webkitMinor}`;
 }
+function randomBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-async function pressandhold(page, checkInterval = 200, maxWait = 10000) {
-  const start = Date.now();
-  let holding = false;
+async function humanLikeMove(page, targetX, targetY) {
+  const start = await page.mouse._lastPosition || { x: 100, y: 100 };
+  const steps = randomBetween(25, 45);
 
-  while (Date.now() - start < maxWait) {
-    const element = await page.$('text="Press & Hold"');
+  for (let i = 0; i < steps; i++) {
+    const t = i / steps;
+   
+    const ease = 1 - Math.pow(1 - t, 3);
 
-    if (element && !holding) {
-      // Element appeared → start holding middle button
-      const box = await element.boundingBox();
-      if (box) {
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.down({ button: 'middle' });
-        holding = true;
-        console.log("🖱️ Press & Hold started");
-      }
-    } else if (!element && holding) {
-      // Element disappeared → release middle button
-      await page.mouse.up({ button: 'middle' });
-      console.log("✅ Press & Hold released");
-      return true;
-    }
+    const x = start.x + (targetX - start.x) * ease + randomBetween(-1, 1);
+    const y = start.y + (targetY - start.y) * ease + randomBetween(-1, 1);
 
-    // Small delay between checks
-    await page.waitForTimeout(checkInterval);
+    await page.mouse.move(x, y);
+    await page.waitForTimeout(randomBetween(5, 20));
+  }
+}
+
+async function pressAndHold(page) {
+  
+  await page.waitForTimeout(randomBetween(3000, 5000));
+  const viewport = page.viewportSize();
+  const x = viewport.width*.23;
+  const y = viewport.height*.4;
+
+ 
+  await humanLikeMove(page, x, y);
+
+  await page.screenshot({path: "screenshot/"+Date.now().toString()+".png"})
+ 
+  await page.mouse.down({ button: 'left' });
+
+ 
+  await page.waitForTimeout(randomBetween(2500, 4200));
+
+ 
+  for (let i = 0; i < randomBetween(5, 12); i++) {
+    await page.mouse.move(
+      x + randomBetween(-2, 2),
+      y + randomBetween(-2, 2)
+    );
+    await page.waitForTimeout(randomBetween(50, 150));
   }
 
-  // Timeout reached
-  if (holding) {
-    await page.mouse.up({ button: 'middle' });
-    console.log("⚠️ Timeout reached, middle button released anyway");
-  } else {
-    console.log("⚠️ 'Press & Hold' never appeared");
-  }
-
-  return false;
+  await page.mouse.up({ button: 'left' });
 }
 
 async function getpage(url,headless = false,quiet=false) {
-  const browser = await chromium.launch({ headless, args: [
+  const browser = await chromium.launch({ headless: headless, args: [
     '--disable-blink-features=AutomationControlled'
   ] });
 
@@ -93,9 +104,7 @@ async function getpage(url,headless = false,quiet=false) {
   }
 
   if (!quiet) console.log("Browser opened with your session cookie! ("+url+")");
-  await pressandhold(page)
-  await new Promise(r => setTimeout(r, 2000));
-  await page.screenshot({path: "E:\\Documents\\Best Title Generator\\SCREENS\\"+url.replace("https://www.fiverr.com",'').replace('/','').replace('\\','').replace('?','').replace('=','').slice(0,30)+".png"});
+  await pressAndHold(page)
 
   return page
 }
