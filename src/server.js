@@ -11,7 +11,7 @@ app.get('/', async (req, res) => {
   res.json(
       await main(
         req.query.search,
-        numberOfPages = req.query?.num || 10,
+        numberOfPages = req.query?.num || 1,
         BUFFER = req.query?.buffer || 3,
       )
   )
